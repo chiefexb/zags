@@ -1,5 +1,5 @@
 <config>
- <main_database>
+ <main_database a=5 b=6>
   <hostname>localhost</hostname>
   <dbname>zags</dbname>
   <user>SYSDBA</user>
