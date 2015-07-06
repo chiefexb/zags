@@ -40,9 +40,11 @@ def main():
  print  len(sys.argv)
  if len(sys.argv) <2:
   print "Для запуска набери: ./processing.py loadrbd|process|get"
-  print '	loadrbd - Загрузка новых данных из РБД и очистка таблицы от предыдущей версии'
-  print '	process - Поиск соответвий реестров из ГИБДД с данными из РБД'
-  print '	get     - Выгрузка реестров для загрузки в подразделениях'
+  print '	loadrbd - Загрузка новых данных из РБД'
+  print '	delete    Очистка	'
+  print '	process - Поиск соответвий реестров из ЗАГС с данными из РБД'
+  print '	get <КОД ОТДЕЛА> <КОЛ-ВО>     - Выгрузка Файлов для ЗАГС'
+  print sys.argv
   sys.exit(2)
  logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s',level = logging.DEBUG, filename = './processing.log')
  fileconfig=file('./config.xml')
@@ -79,7 +81,7 @@ def main():
   cur = con.cursor()
   cur2 = con2.cursor()
   sq= sq1
-  sq2="INSERT INTO DOCIPDOC (ID, DOC_NUMBER, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_FULLNAME,ID_DBTR_BORN, ID_DEBTSUM, DOCSTATUSID, IP_EXEC_PRIST_NAME ) VALUES (?,?,?,?,?,?,?,?,?,?)"
+  sq2="INSERT INTO DOCIPDOC (ID, DOC_NUMBER, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_FULLNAME,ID_DBTR_BORN, ID_DEBTSUM, DOCSTATUSID, IP_EXEC_PRIST_NAME,STATUS ) VALUES (?,?,?,?,?,?,?,?,?,?,0)"
   print sq
   st=u"Генерация скрипта вставки данных из РБД во временную таблицу"
   logging.info(st)
@@ -96,5 +98,22 @@ def main():
    for rr in r:
     cur.execute (sq2,rr)
    con.commit()
+ if sys.argv[1]=='get':
+  print sys.argv[2],sys.argv[3]
+  osp=sys.argv[2]
+  #print osp+'0000000000'
+  #print str(int(osp)+1)+'0000000000'
+  try:
+   con = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
+  except  Exception, e:
+   print("Ошибка при открытии базы данных:\n"+str(e))
+   sys.exit(2)
+  cur = con.cursor()
+  sq1='select * from DOCIPDOC where id>='+osp+'0000000000 and id<'+str(int(osp)+1)+'0000000000 and status=0'
+  cur.execute(sq1)
+  r=cur.fetchall()
+  st=u"Для отдела "+ osp + u" найдено "+unicode(str(len(r)))+u" записей для выгрузки."
+  inform(st)
+
 if __name__ == "__main__":
     main()
