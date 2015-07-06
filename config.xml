@@ -1,18 +1,26 @@
 <config>
- <main_database a=5 b=6>
+ <main_database>
   <hostname>localhost</hostname>
   <dbname>zags</dbname>
   <user>SYSDBA</user>
-  <password></password>
+  <password>masterkey</password>
  </main_database>
  <rbd>
-  <hostname>10.9.4.11</hostname>
+  <hostname>localhost</hostname>
   <dbname>ncore-rbd</dbname>
   <user>SYSDBA</user>
-  <password></password>
+  <password>masterkey</password>
  </rbd>
+ <output_type>xls</output_type>
+ <output_scheme>
+  <col>DOC_NUMBER</col>
+  <col>ID_DBTR_FIRSTNAME</col>
+  <col>ID_DBTR_SECONDNAME</col>
+  <col>ID_DBTR_LASTNAME</col>
+  <col>ID_DBTR_BORN</col>
+ </output_scheme>
  <input_path>/home/in/</input_path>
- <input_arc_path>/home/gibdd/in_arc/</input_arc_path>
- <output_path>/home/gibdd/out/</output_path>
+ <input_arc_path>/home/zags/in_arc/</input_arc_path>
+ <output_path>/home/work/zags/out/</output_path>
  <output_path2>/home/all/gaiout/</output_path2>
 </config>
