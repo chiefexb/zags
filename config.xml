@@ -3,13 +3,13 @@
   <hostname>localhost</hostname>
   <dbname>zags</dbname>
   <user>SYSDBA</user>
-  <password>masterkey</password>
+  <password></password>
  </main_database>
  <rbd>
-  <hostname>localhost</hostname>
+  <hostname>10.9.4.11</hostname>
   <dbname>ncore-rbd</dbname>
   <user>SYSDBA</user>
-  <password>masterkey</password>
+  <password></password>
  </rbd>
  <output_type>xls</output_type>
  <output_scheme>
@@ -21,6 +21,6 @@
  </output_scheme>
  <input_path>/home/in/</input_path>
  <input_arc_path>/home/zags/in_arc/</input_arc_path>
- <output_path>/home/work/zags/out/</output_path>
+ <output_path>/home/all/zags/</output_path>
  <output_path2>/home/all/gaiout/</output_path2>
 </config>

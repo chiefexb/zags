@@ -80,7 +80,7 @@ def main():
  nd=xmlroot.find('output_path2')
  output_type=xmlroot.find('output_type').text
  output_path2=nd.text
- sq1="SELECT  doc_ip_doc.id , document.doc_number, doc_ip_doc.id_dbtr_name,entity.entt_firstname,entity.entt_patronymic, entity.entt_surname,doc_ip_doc.id_dbtr_born, doc_ip.id_debtsum, document.docstatusid, doc_ip.ip_exec_prist_name FROM DOC_IP_DOC DOC_IP_DOC JOIN DOC_IP ON DOC_IP_DOC.ID=DOC_IP.ID JOIN DOCUMENT ON DOC_IP.ID=DOCUMENT.ID join entity on doc_ip.id_dbtr=entity.entt_id   where document.docstatusid=9      and DOC_IP_DOC.ID_DBTR_ENTID IN (2,71,95,96,97,666)"
+ sq1="SELECT  doc_ip_doc.id , document.doc_number, doc_ip_doc.id_dbtr_name,entity.entt_firstname,entity.entt_patronymic, entity.entt_surname,doc_ip_doc.id_dbtr_born, doc_ip.id_debtsum, document.docstatusid, doc_ip.ip_exec_prist_name FROM DOC_IP_DOC DOC_IP_DOC JOIN DOC_IP ON DOC_IP_DOC.ID=DOC_IP.ID JOIN DOCUMENT ON DOC_IP.ID=DOCUMENT.ID join entity on doc_ip.id_dbtr=entity.entt_id   where document.docstatusid=9      and DOC_IP_DOC.ID_DBTR_ENTID IN (2,71,95,96,97,666) and doc_ip_doc.id_dbtr_born is not null"
  if sys.argv[1]=='loadrbd':
   try:
    con = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
@@ -92,7 +92,7 @@ def main():
   except  Exception, e:
    print("Ошибка при открытии базы данных:\n"+str(e))
    sys.exit(2)
-  cur = con2.cursor()
+  cur = con.cursor()
   cur2 = con2.cursor()
   sq= sq1
   sq2="INSERT INTO DOCIPDOC (ID, DOC_NUMBER,ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME,ID_DBTR_BORN, ID_DEBTSUM, DOCSTATUSID, IP_EXEC_PRIST_NAME,STATUS ) VALUES (?,?,?,?,?,?,?,?,?,?,0)"
@@ -102,9 +102,9 @@ def main():
   print st
   with Profiler() as p:
    cur2.execute(sq)
-   #r=cur2.fetchall()
-   r=cur2.fetchmany(1000)
-  cur.execute (sq2,r[0]) 
+   r=cur2.fetchall()
+   #r=cur2.fetchmany(1000)
+  #cur.execute (sq2,r[]) 
   st=u"Выбрано " +str(len(r))+ u"записей"
   logging.info(st)
   st=u"Вставка данных во временную таблицу"
@@ -130,20 +130,24 @@ def main():
    print("Ошибка при открытии базы данных:\n"+str(e))
    sys.exit(2)
   cur = con.cursor()
+  cur2=con.cursor()
   sq1='select * from DOCIPDOC where id>='+osp+'0000000000 and id<'+str(int(osp)+1)+'0000000000 and status=0'
   cur.execute(sq1)
   r=cur.fetchall()
   try:
-   cnt=sys.argv[3]
+   cnt=int(sys.argv[3])
   except:
    st=u"Не указано количество сделаю полную выборку."
    inform(st)
+   cnt=len(r)
+  #print sys.argv[3]
+  if cnt>len(r):
    cnt=len(r)
   st=u"Для отдела "+ osp + u" найдено "+unicode(str(len(r)))+u" записей для выгрузки."
   inform(st)
   st=u"Будет выгружено " +unicode(str(cnt)) +u" записей."
   inform(st)
-  print output_type
+  #print output_type
   if output_type=="xls":
    matr=[]
    for ch in  output_scheme.getchildren():
@@ -153,13 +157,20 @@ def main():
    ws = wb.add_sheet('A Test Sheet')
    cl=0
    rw=0
-   for rr in r:
+   style1 = xlwt.XFStyle()
+   style1.num_format_str = 'DD.MM.YY'
+   i=0
+   for i in range(0,cnt):
     cl=0
     for mm in matr:
-     ws.write(rw, cl,rr[flds[mm]])
-     cl+=1
+     if str(type(r[i][flds[mm]]))=="<type 'datetime.date'>":
+      ws.write(rw, cl,r[i][flds[mm]],style1)
+     else:
+      ws.write(rw, cl,r[i][flds[mm]])
+     cl+=1 
     rw+=1
-   wb.save(output_path+"ex.xls")
+    i+=1
+   wb.save(output_path+osp+".xls")
  if sys.argv[1]=='delete':
   try:
    con = fdb.connect (host=main_host, database=main_dbname, user=main_user,  password=main_password,charset='WIN1251')
