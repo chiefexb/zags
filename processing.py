@@ -113,6 +113,61 @@ def main():
    for rr in r:
     cur.execute (sq2,rr)
    con.commit()
+ if sys.argv[1]=='group':
+  try:
+   con = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
+  except  Exception, e:
+   print("Ошибка при открытии базы данных:\n"+str(e))
+   sys.exit(2)
+  cur = con.cursor()
+  try:
+   con2 = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
+  except  Exception, e:
+   print("Ошибка при открытии базы данных:\n"+str(e))
+   sys.exit(2)
+  cur2 = con2.cursor()
+  #cur2 = con2.cursor()  
+  st=u"Начинаем группировку должников"
+  inform(st)
+  sq="select count(id) from DOCIPDOC"
+  cur.execute(sq)
+  r=cur.fetchall()
+  lb=int(r[0][0])
+  #print lb
+  sq2="select upper(d.id_dbtr_fullname),  (select first 1 id_dbtr_firstname from docipdoc), (select first 1 id_dbtr_secondname from docipdoc), (select first 1 id_dbtr_lastname from docipdoc), d.id_dbtr_born from docipdoc d group by upper( d.id_dbtr_fullname),d.id_dbtr_born"
+  #"select upper(docipdoc.id_dbtr_fullname), docipdoc.id_dbtr_born from docipdoc
+  # group by upper( docipdoc.id_dbtr_fullname),docipdoc.id_dbtr_born"
+  st=u"Меряем время скрипта группировки"
+  inform(st)
+  with Profiler() as p:
+   cur.execute(sq2)
+   r=cur.fetchall()
+  la=len(r)
+  prc=int( (float(la)/float(lb)) * 100)
+  print prc
+  st=unicode(lb)+ u" должников сгруппированы. Найдено "+unicode(la) +u" соответствий. Коэффициент сжатия "+unicode(prc)+u" процентов."
+  inform(st)
+  st= u"Вставляем результат в отдельную таблицу."
+  inform(st)
+  with Profiler() as p:
+   for rr in r:
+    id=getgenerator(cur,"GEN_R")
+    r2=[id]
+    r2.extend(rr)
+    #sq3="select * from docipdoc where upper(docipdoc.id_dbtr_fullname)="+quoted(rr[0]) +" and docipdoc.id_dbtr_born="+quoted(str(rr[1]))
+    sq3="INSERT INTO REESTR (ID, ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_BORN) VALUES (?, ?, ?, ?, ?, ?)" 
+    #print rr[4], type (rr[4])
+    sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(id)+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[0])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[4].strftime("%d.%m.%Y") ) )
+    #print sq4
+    cur.execute(sq3,r2)
+    cur2.execute(sq4)
+   con.commit()
+   con2.commit()
+  #  r2=cur.fetchmany()
+  #  s= (id, rr[0])
+  #  # r2[0][flds["ID_DBTR_FIRSTNAME"])#, r2[0][flds["ID_DBTR_SECONDNAME"]], r2[0][flds["ID_DBTR_LASTNAME"]], rr[1]) )
+  #  t.append(s)
+  #print len(t) 
  if sys.argv[1]=='get':
   #print sys.argv[2],sys.argv[3]
   try:
