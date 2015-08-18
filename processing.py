@@ -80,7 +80,7 @@ def main():
  nd=xmlroot.find('output_path2')
  output_type=xmlroot.find('output_type').text
  output_path2=nd.text
- sq1="SELECT  doc_ip_doc.id , document.doc_number, doc_ip_doc.id_dbtr_name,entity.entt_firstname,entity.entt_patronymic, entity.entt_surname,doc_ip_doc.id_dbtr_born, doc_ip.id_debtsum, document.docstatusid, doc_ip.ip_exec_prist_name FROM DOC_IP_DOC DOC_IP_DOC JOIN DOC_IP ON DOC_IP_DOC.ID=DOC_IP.ID JOIN DOCUMENT ON DOC_IP.ID=DOCUMENT.ID join entity on doc_ip.id_dbtr=entity.entt_id   where document.docstatusid=9      and DOC_IP_DOC.ID_DBTR_ENTID IN (2,71,95,96,97,666) and doc_ip_doc.id_dbtr_born is not null"
+ sq1="SELECT  doc_ip_doc.id , document.doc_number, doc_ip_doc.id_dbtr_name,entity.entt_firstname,entity.entt_patronymic, entity.entt_surname,doc_ip_doc.id_dbtr_born, doc_ip.id_debtsum, document.docstatusid, doc_ip.ip_exec_prist_name FROM DOC_IP_DOC DOC_IP_DOC JOIN DOC_IP ON DOC_IP_DOC.ID=DOC_IP.ID JOIN DOCUMENT ON DOC_IP.ID=DOCUMENT.ID join entity on doc_ip.id_dbtr=entity.entt_id   where document.docstatusid=9      and DOC_IP_DOC.ID_DBTR_ENTID IN (2,71,95,96,97,666) and doc_ip_doc.id_dbtr_born is not null and  doc_ip_doc.id_dbtr_born >='01.01.1900'"
  if sys.argv[1]=='loadrbd':
   try:
    con = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
@@ -150,6 +150,7 @@ def main():
   st= u"Вставляем результат в отдельную таблицу."
   inform(st)
   with Profiler() as p:
+   stt=[]
    for rr in r:
     id=getgenerator(cur,"GEN_R")
     r2=[id]
@@ -157,12 +158,24 @@ def main():
     #sq3="select * from docipdoc where upper(docipdoc.id_dbtr_fullname)="+quoted(rr[0]) +" and docipdoc.id_dbtr_born="+quoted(str(rr[1]))
     sq3="INSERT INTO REESTR (ID, ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_BORN) VALUES (?, ?, ?, ?, ?, ?)" 
     #print rr[4], type (rr[4])
+    
     sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(id)+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[0])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[4].strftime("%d.%m.%Y") ) )
     #print sq4
     cur.execute(sq3,r2)
-    cur2.execute(sq4)
+    #cur2.execute(sq4)
+    stt.append(sq4)
    con.commit()
+  st= u"Найдено "+unicode(len(stt))
+  inform(st)
+
+  st= u"Проставляем связи в таблицах исходной и группированной"
+  inform(st)
+
+  with Profiler() as p:
+   for rr in stt:
+     cur2.execute(rr)
    con2.commit()
+   #con2.commit()
   #  r2=cur.fetchmany()
   #  s= (id, rr[0])
   #  # r2[0][flds["ID_DBTR_FIRSTNAME"])#, r2[0][flds["ID_DBTR_SECONDNAME"]], r2[0][flds["ID_DBTR_LASTNAME"]], rr[1]) )
