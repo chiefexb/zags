@@ -21,7 +21,11 @@ flds={"ID":0,
 "DOCSTATUSID":8,
 "IP_EXEC_PRIST_NAME":9,
 "STATUS":10}
-
+from Queue import Queue
+import threading
+LOCK = threading.RLock()
+queue = Queue()
+#th=0
 def getgenerator(cur,gen):
  sq="SELECT GEN_ID("+gen+", 1) FROM RDB$DATABASE"
  try:
@@ -49,6 +53,33 @@ class Profiler(object):
 def quoted(a):
  st=u"'"+a+u"'"
  return st
+def worker(cur,con):
+ global queue
+ #global cons
+ #global curs
+ #global queue
+ #global LOCK
+ #global th
+ while True:
+  try:
+   sq=queue.get_nowait()
+  except Exception, error:
+   sq=[]
+   print 'ERR'
+  #сам перехват ошибки
+  # con.commit()
+  #print sq[1]
+  #LOCK.acquire()
+  #print th
+  if len(sq)==2:
+   cur.execute(sq[0],sq[1])
+   queue.task_done()
+  elif len(sq)==1:
+   cur.execute(sq)
+   queue.task_done()
+  #print  queue.qsize()
+ #LOCK.release()
+ return
 def main():
  print  len(sys.argv)
  if len(sys.argv) <2:
@@ -80,7 +111,7 @@ def main():
  nd=xmlroot.find('output_path2')
  output_type=xmlroot.find('output_type').text
  output_path2=nd.text
- sq1="SELECT  doc_ip_doc.id , document.doc_number, doc_ip_doc.id_dbtr_name,entity.entt_firstname,entity.entt_patronymic, entity.entt_surname,doc_ip_doc.id_dbtr_born, doc_ip.id_debtsum, document.docstatusid, doc_ip.ip_exec_prist_name FROM DOC_IP_DOC DOC_IP_DOC JOIN DOC_IP ON DOC_IP_DOC.ID=DOC_IP.ID JOIN DOCUMENT ON DOC_IP.ID=DOCUMENT.ID join entity on doc_ip.id_dbtr=entity.entt_id   where document.docstatusid=9      and DOC_IP_DOC.ID_DBTR_ENTID IN (2,71,95,96,97,666) and doc_ip_doc.id_dbtr_born is not null and  doc_ip_doc.id_dbtr_born >='01.01.1900'"
+ sq1="SELECT  doc_ip_doc.id , document.doc_number, trim(doc_ip_doc.id_dbtr_name),entity.entt_firstname,entity.entt_patronymic, entity.entt_surname,doc_ip_doc.id_dbtr_born, doc_ip.id_debtsum, document.docstatusid, doc_ip.ip_exec_prist_name FROM DOC_IP_DOC DOC_IP_DOC JOIN DOC_IP ON DOC_IP_DOC.ID=DOC_IP.ID JOIN DOCUMENT ON DOC_IP.ID=DOCUMENT.ID join entity on doc_ip.id_dbtr=entity.entt_id   where document.docstatusid=9      and DOC_IP_DOC.ID_DBTR_ENTID IN (2,71,95,96,97,666) and doc_ip_doc.id_dbtr_born is not null and  doc_ip_doc.id_dbtr_born >='01.01.1900'"
  if sys.argv[1]=='loadrbd':
   try:
    con = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
@@ -114,24 +145,33 @@ def main():
     cur.execute (sq2,rr)
    con.commit()
  if sys.argv[1]=='group':
-  try:
-   con = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
-  except  Exception, e:
-   print("Ошибка при открытии базы данных:\n"+str(e))
-   sys.exit(2)
-  cur = con.cursor()
-  try:
-   con2 = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
-  except  Exception, e:
-   print("Ошибка при открытии базы данных:\n"+str(e))
-   sys.exit(2)
-  cur2 = con2.cursor()
+  global queue
+  global cons
+  #global curs
+  #global th
+  threadcount=6
+  cons={}
+  curs={}
+  for i in range(0,threadcount):
+   try:
+    cons[i] = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
+   except  Exception, e:
+    print("Ошибка при открытии базы данных:\n"+str(e))
+    sys.exit(2)
+   curs[i] = cons[i].cursor()
+  print curs
+  #try:
+  # con2 = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
+  #except  Exception, e:
+  # print("Ошибка при открытии базы данных:\n"+str(e))
+  # sys.exit(2)
+  #cur2 = con2.cursor()
   #cur2 = con2.cursor()  
   st=u"Начинаем группировку должников"
   inform(st)
   sq="select count(id) from DOCIPDOC"
-  cur.execute(sq)
-  r=cur.fetchall()
+  curs[0].execute(sq)
+  r=curs[0].fetchall()
   lb=int(r[0][0])
   #print lb
   sq2="select upper(d.id_dbtr_fullname),  (select first 1 id_dbtr_firstname from docipdoc), (select first 1 id_dbtr_secondname from docipdoc), (select first 1 id_dbtr_lastname from docipdoc), d.id_dbtr_born from docipdoc d group by upper( d.id_dbtr_fullname),d.id_dbtr_born"
@@ -140,41 +180,83 @@ def main():
   st=u"Меряем время скрипта группировки"
   inform(st)
   with Profiler() as p:
-   cur.execute(sq2)
-   r=cur.fetchall()
+   curs[0].execute(sq2)
+   r=curs[0].fetchall()
   la=len(r)
-  prc=int( (float(la)/float(lb)) * 100)
-  print prc
-  st=unicode(lb)+ u" должников сгруппированы. Найдено "+unicode(la) +u" соответствий. Коэффициент сжатия "+unicode(prc)+u" процентов."
-  inform(st)
+  print la,lb
+  #prc=int( (float(la)/float(lb)) * 100)
+  #print prc
+  #st=unicode(lb)+ u" должников сгруппированы. Найдено "+unicode(la) +u" соответствий. Коэффициент сжатия "+unicode(prc)+u" процентов."
+  #inform(st)
   st= u"Вставляем результат в отдельную таблицу."
   inform(st)
+  for i in range(1,threadcount):
+   #Проход циклом по диапазону чисел количества потоков
+       print i
+       cur=curs[i]
+       con=cons[i]
+       thread_ = threading.Thread(target=worker, args=(cur,con))
+       #Создается поток, target-имя функции, которая являет собой
+       #участок кода, выполняемый многопоточно
+       thread_.setDaemon(True)
+       print "Поток",i
+       thread_.start()
   with Profiler() as p:
    stt=[]
    for rr in r:
-    id=getgenerator(cur,"GEN_R")
+    id=getgenerator(curs[0],"GEN_R")
     r2=[id]
     r2.extend(rr)
     #sq3="select * from docipdoc where upper(docipdoc.id_dbtr_fullname)="+quoted(rr[0]) +" and docipdoc.id_dbtr_born="+quoted(str(rr[1]))
     sq3="INSERT INTO REESTR (ID, ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_BORN) VALUES (?, ?, ?, ?, ?, ?)" 
     #print rr[4], type (rr[4])
-    
+    queue.put([sq3,r2])
+    #curs[0].exec
     sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(id)+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[0])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[4].strftime("%d.%m.%Y") ) )
     #print sq4
-    cur.execute(sq3,r2)
+    #queue.put(sq4)
+    #curs[0].execute(sq3,r2)
     #cur2.execute(sq4)
-    stt.append(sq4)
-   con.commit()
-  st= u"Найдено "+unicode(len(stt))
+    #stt.append(sq4)
+    #print queue.qsize()
+  st= u"Запуск потоков"
   inform(st)
-
-  st= u"Проставляем связи в таблицах исходной и группированной"
-  inform(st)
-
-  with Profiler() as p:
-   for rr in stt:
-     cur2.execute(rr)
-   con2.commit()
+  print queue.qsize()
+  #queue.join()
+  #with Profiler() as p:
+   #for i in range(0,threadcount):
+   #Проход циклом по диапазону чисел количества потоков
+   #    print i
+   #    cur=curs[i]
+   #    con=cons[i]
+   #    thread_ = threading.Thread(target=worker(cur,con))
+   #    #Создается поток, target-имя функции, которая являет собой 
+   #    #участок кода, выполняемый многопоточно
+   #    thread.setDaemon(True)
+   #    print i
+   #    thread_.start()
+   #    #Вызывается метод start() , таким образом поток запускается
+   #print 'RUN'
+  while threading.active_count() >1:
+   #До тех пор, пока количество активных потоков больше 1 (значит, 
+   #запущенные потоки продолжают работу)
+   time.sleep(30)
+   print queue.qsize()
+   #Основной поток засыпает на 1 секунду
+  print "FINISHED"
+   #for i in range(0,threadcount):
+   # cons[i].commit()
+   #con.commit()
+  #st= u"Найдено "+unicode(len(stt))
+  #inform(st)
+  
+  #st= u"Проставляем связи в таблицах исходной и группированной"
+  #inform(st)
+  #print stt[0]
+  #with Profiler() as p:
+  # for rr in stt:
+  #   cur2.execute(rr)
+   #con2.commit()
    #con2.commit()
   #  r2=cur.fetchmany()
   #  s= (id, rr[0])
