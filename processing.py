@@ -64,19 +64,14 @@ def worker(cur,con):
   try:
    sq=queue.get_nowait()
   except Exception, error:
-   sq=[]
-   print 'ERR'
-  #сам перехват ошибки
-  # con.commit()
-  #print sq[1]
-  #LOCK.acquire()
-  #print th
-  if len(sq)==2:
-   cur.execute(sq[0],sq[1])
-   queue.task_done()
-  elif len(sq)==1:
-   cur.execute(sq)
-   queue.task_done()
+   sq=[] 
+  else:
+   if len(sq)==2:
+    cur.execute(sq[0],sq[1])
+    queue.task_done()
+   elif len(sq)==1:
+    cur.execute(sq)
+    queue.task_done()
   #print  queue.qsize()
  #LOCK.release()
  return
@@ -146,7 +141,7 @@ def main():
    con.commit()
  if sys.argv[1]=='group':
   global queue
-  global cons
+  #global cons
   #global curs
   #global th
   threadcount=6
@@ -223,27 +218,18 @@ def main():
   inform(st)
   print queue.qsize()
   #queue.join()
-  #with Profiler() as p:
-   #for i in range(0,threadcount):
-   #Проход циклом по диапазону чисел количества потоков
-   #    print i
-   #    cur=curs[i]
-   #    con=cons[i]
-   #    thread_ = threading.Thread(target=worker(cur,con))
-   #    #Создается поток, target-имя функции, которая являет собой 
-   #    #участок кода, выполняемый многопоточно
-   #    thread.setDaemon(True)
-   #    print i
-   #    thread_.start()
-   #    #Вызывается метод start() , таким образом поток запускается
-   #print 'RUN'
-  while threading.active_count() >1:
+  while queue.full():#threading.active_count() >1:
    #До тех пор, пока количество активных потоков больше 1 (значит, 
    #запущенные потоки продолжают работу)
-   time.sleep(30)
+   time.sleep(5)
    print queue.qsize()
    #Основной поток засыпает на 1 секунду
   print "FINISHED"
+  st= u"Меряем коммит"
+  inform(st)
+  with Profiler() as p:
+   for i in range(1,threadcount):
+    cons[i].commit()  
    #for i in range(0,threadcount):
    # cons[i].commit()
    #con.commit()
