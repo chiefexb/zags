@@ -21,11 +21,14 @@ flds={"ID":0,
 "DOCSTATUSID":8,
 "IP_EXEC_PRIST_NAME":9,
 "STATUS":10}
-from Queue import Queue
-import threading
-LOCK = threading.RLock()
-queue = Queue()
+#from Queue import Queue
+#import threading
+#LOCK = threading.RLock()
+#queue = Queue()
+#exitflag=False
 #th=0
+#curs={}
+from multiprocessing import Process, Lock,Queue
 def getgenerator(cur,gen):
  sq="SELECT GEN_ID("+gen+", 1) FROM RDB$DATABASE"
  try:
@@ -53,27 +56,37 @@ class Profiler(object):
 def quoted(a):
  st=u"'"+a+u"'"
  return st
-def worker(cur,con):
- global queue
+def worker(th,curs,queue):
+ #global queue
  #global cons
  #global curs
  #global queue
  #global LOCK
- #global th
- while True:
-  try:
-   sq=queue.get_nowait()
-  except Exception, error:
-   sq=[] 
-  else:
-   if len(sq)==2:
-    cur.execute(sq[0],sq[1])
-    queue.task_done()
-   elif len(sq)==1:
-    cur.execute(sq)
-    queue.task_done()
+ #global exitflag
+ #print "EXT",exitflag
+ #while not exitflag:
+ # LOCK.acquire()
+  #print queue.qsize(), queue.empty()
+ while not queue.empty():
+   #LOCK.acquire()
+  sq=queue.get()
+   #LOCK.release()
+   #print type(queue)
+   
+  if len(sq)==2:
+    #print 2
+   curs[th].execute(sq[0],sq[1])
+    #LOCK.acquire()
+    #queue.task_done()
+   
+  elif len(sq)==1:
+   curs[th].execute(sq)
+    #LOCK.acquire()
+    #queue.task_done()
   #print  queue.qsize()
- #LOCK.release()
+  #else:
+  # LOCK.release()
+ #print "EXIT",self.name 
  return
 def main():
  print  len(sys.argv)
@@ -140,13 +153,15 @@ def main():
     cur.execute (sq2,rr)
    con.commit()
  if sys.argv[1]=='group':
-  global queue
+  #global queue
   #global cons
   #global curs
+  #global exitflag
   #global th
-  threadcount=6
+  threadcount=3
   cons={}
   curs={}
+  queue=Queue()
   for i in range(0,threadcount):
    try:
     cons[i] = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
@@ -185,19 +200,23 @@ def main():
   #inform(st)
   st= u"Вставляем результат в отдельную таблицу."
   inform(st)
-  for i in range(1,threadcount):
+  threads=[]
+ # for i in range(1,threadcount):
    #Проход циклом по диапазону чисел количества потоков
-       print i
-       cur=curs[i]
-       con=cons[i]
-       thread_ = threading.Thread(target=worker, args=(cur,con))
-       #Создается поток, target-имя функции, которая являет собой
-       #участок кода, выполняемый многопоточно
-       thread_.setDaemon(True)
-       print "Поток",i
-       thread_.start()
+   #    print i
+   #    #cur=curs[i]
+   #    #con=cons[i]
+   #    thread_ = threading.Thread(target=worker, args=(i,))
+   #    #Создается поток, target-имя функции, которая являет собой
+   #    #участок кода, выполняемый многопоточно
+   #    thread_.setDaemon(True)
+   #    print "Поток",i
+   #    thread_.start()
+   #    threads.append(thread_)
+  #LOCK.acquire()
   with Profiler() as p:
    stt=[]
+   #LOCK.acquire()
    for rr in r:
     id=getgenerator(curs[0],"GEN_R")
     r2=[id]
@@ -205,7 +224,9 @@ def main():
     #sq3="select * from docipdoc where upper(docipdoc.id_dbtr_fullname)="+quoted(rr[0]) +" and docipdoc.id_dbtr_born="+quoted(str(rr[1]))
     sq3="INSERT INTO REESTR (ID, ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_BORN) VALUES (?, ?, ?, ?, ?, ?)" 
     #print rr[4], type (rr[4])
+    #LOCK.acquire()
     queue.put([sq3,r2])
+    #LOCK.release()
     #curs[0].exec
     sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(id)+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[0])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[4].strftime("%d.%m.%Y") ) )
     #print sq4
@@ -214,21 +235,29 @@ def main():
     #cur2.execute(sq4)
     #stt.append(sq4)
     #print queue.qsize()
+  #LOCK.release()
   st= u"Запуск потоков"
   inform(st)
   print queue.qsize()
+  #LOCK.release()
   #queue.join()
-  while queue.full():#threading.active_count() >1:
+  #print str(queue.full())
+  for i in range(1,threadcount):
+   Process(target=worker, args=(i, curs,queue)).start()
+  with Profiler() as p:
+   while not queue.empty():#threading.active_count() >1:
    #До тех пор, пока количество активных потоков больше 1 (значит, 
    #запущенные потоки продолжают работу)
-   time.sleep(5)
-   print queue.qsize()
+    time.sleep(5)
+    print queue.qsize()
    #Основной поток засыпает на 1 секунду
   print "FINISHED"
+  exitflag=True
   st= u"Меряем коммит"
   inform(st)
   with Profiler() as p:
    for i in range(1,threadcount):
+    #thread_.stop()
     cons[i].commit()  
    #for i in range(0,threadcount):
    # cons[i].commit()
