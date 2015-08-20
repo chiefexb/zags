@@ -56,38 +56,40 @@ class Profiler(object):
 def quoted(a):
  st=u"'"+a+u"'"
  return st
-def worker(th,curs,queue):
- #global queue
- #global cons
- #global curs
- #global queue
- #global LOCK
- #global exitflag
- #print "EXT",exitflag
- #while not exitflag:
- # LOCK.acquire()
-  #print queue.qsize(), queue.empty()
- while not queue.empty():
-   #LOCK.acquire()
-  sq=queue.get()
-   #LOCK.release()
+class worker (Process):
+ def __init__(self,q,prm):
+   self.prm=prm
+   self.q=q
+   self.con=fdb.connect (host=prm['host'], database=prm['database'], user=prm['user'], password=prm['password'],charset=prm['charset'])
+   self.cur=self.con.cursor()
+   super(worker, self).__init__()
+ def run (self):
+  #while not self.queue.empty():
+  with Profiler() as p:
+   # LOCK.acquire()
+   print len (self.q)
+   i=0
+   for sq in self.q:
+    #sq=self.queue.get()
+    #LOCK.release()
    #print type(queue)
-   
-  if len(sq)==2:
-    #print 2
-   curs[th].execute(sq[0],sq[1])
-    #LOCK.acquire()
-    #queue.task_done()
-   
-  elif len(sq)==1:
-   curs[th].execute(sq)
+    i=i+1
+    print i
+    if len(sq)==2:
+     #print 2
+     #print sq[1]
+     self.cur.execute(sq[0],sq[1])
+     #LOCK.acquire()
+     #queue.task_done()
+    elif len(sq)==1:
+     self.cur.execute(sq)
     #LOCK.acquire()
     #queue.task_done()
   #print  queue.qsize()
   #else:
   # LOCK.release()
  #print "EXIT",self.name 
- return
+ #return
 def main():
  print  len(sys.argv)
  if len(sys.argv) <2:
@@ -158,18 +160,23 @@ def main():
   #global curs
   #global exitflag
   #global th
-  threadcount=2
-  cons={}
-  curs={}
+  threadcount=4
+  #cons={}
+  #curs={}
   queue=Queue()
-  for i in range(0,threadcount):
-   try:
-    cons[i] = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
-   except  Exception, e:
-    print("Ошибка при открытии базы данных:\n"+str(e))
-    sys.exit(2)
-   curs[i] = cons[i].cursor()
-  print curs
+  prm={}
+  prm['host']=main_host
+  prm['database']=main_dbname
+  prm['user']=main_user
+  prm['password']=main_password
+  prm['charset']='WIN1251'
+  try:
+   con = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
+  except  Exception, e:
+   print("Ошибка при открытии базы данных:\n"+str(e))
+   sys.exit(2)
+  cur = con.cursor()
+  #print curs
   #try:
   # con2 = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
   #except  Exception, e:
@@ -180,8 +187,8 @@ def main():
   st=u"Начинаем группировку должников"
   inform(st)
   sq="select count(id) from DOCIPDOC"
-  curs[0].execute(sq)
-  r=curs[0].fetchall()
+  cur.execute(sq)
+  r=cur.fetchall()
   lb=int(r[0][0])
   #print lb
   sq2="select upper(d.id_dbtr_fullname),  (select first 1 id_dbtr_firstname from docipdoc), (select first 1 id_dbtr_secondname from docipdoc), (select first 1 id_dbtr_lastname from docipdoc), d.id_dbtr_born from docipdoc d group by upper( d.id_dbtr_fullname),d.id_dbtr_born"
@@ -190,8 +197,8 @@ def main():
   st=u"Меряем время скрипта группировки"
   inform(st)
   with Profiler() as p:
-   curs[0].execute(sq2)
-   r=curs[0].fetchall()
+   cur.execute(sq2)
+   r=cur.fetchall()
   la=len(r)
   print la,lb
   #prc=int( (float(la)/float(lb)) * 100)
@@ -200,7 +207,7 @@ def main():
   #inform(st)
   st= u"Вставляем результат в отдельную таблицу."
   inform(st)
-  threads=[]
+  #threads=[]
  # for i in range(1,threadcount):
    #Проход циклом по диапазону чисел количества потоков
    #    print i
@@ -217,15 +224,23 @@ def main():
   with Profiler() as p:
    stt=[]
    #LOCK.acquire()
+   q=[]
+   for i in range(0,threadcount):
+    q.append([])
+   i=0
    for rr in r:
-    id=getgenerator(curs[0],"GEN_R")
+    id=getgenerator(cur,"GEN_R")
     r2=[id]
     r2.extend(rr)
     #sq3="select * from docipdoc where upper(docipdoc.id_dbtr_fullname)="+quoted(rr[0]) +" and docipdoc.id_dbtr_born="+quoted(str(rr[1]))
     sq3="INSERT INTO REESTR (ID, ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_BORN) VALUES (?, ?, ?, ?, ?, ?)" 
     #print rr[4], type (rr[4])
     #LOCK.acquire()
-    queue.put([sq3,r2])
+    #queue.put([sq3,r2])
+    q[i].append([sq3,r2]);
+    i=i+1
+    if i>3:
+     i=0
     #LOCK.release()
     #curs[0].exec
     sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(id)+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[0])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[4].strftime("%d.%m.%Y") ) )
@@ -243,29 +258,45 @@ def main():
   #queue.join()
   #print str(queue.full())
   #con=fdb.connect (host='localhost', database='zagz', user='SYSDBA', password='vSyWIFgg7',charset='WIN1251')
-   #prm={host='localhost', database='zagz', user='SYSDBA', password='vSyWIFgg7',charset='WIN1251'}
+  #prm={host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251'}
   #with Profiler() as p:
-  Process(target=worker, args=(i, curs,prm)).start() 
-  for i in range(1,threadcount):
-   Process(target=worker, args=(i, curs,queue)).start()
+  #Process(target=worker, args=(i, curs,prm)).start()
+  #Иницилизация
+  pool=[] 
+  for i in range(0,threadcount):
+   p=worker(q[i],prm)
+   pool.append(p)
    #Process(target=worker, args=(i, curs,prm)).start()
+  for p in pool:
+   p.start()
   with Profiler() as p:
-   while not queue.empty():#threading.active_count() >1:
-    #for i in range(1,threadcount):
-    # worker (i,curs,queue)
-    #До тех пор, пока количество активных потоков больше 1 (значит, 
-    #запущенные потоки продолжают работу)
-    time.sleep(5)
-    print queue.qsize()
+   #while not queue.empty():#
+   #while threading.active_count() >1:
+   #for p in pool:
+   while  pool[0].is_alive():
+    pass
+   while  pool[1].is_alive():
+    pass
+   while  pool[2].is_alive():
+    pass
+   while  pool[3].is_alive():
+    pass
+
+   #for i in range(1,threadcount):
+   # worker (i,curs,queue)
+   #До тех пор, пока количество активных потоков больше 1 (значит, 
+   #запущенные потоки продолжают работу)
+   #time.sleep(10)
+   #print queue.qsize()
     #Основной поток засыпает на 1 секунду
   print "FINISHED"
   exitflag=True
   st= u"Меряем коммит"
   inform(st)
-  with Profiler() as p:
-   for i in range(1,threadcount):
-    #thread_.stop()
-    cons[i].commit()  
+  #with Profiler() as p:
+  # for i in range(1,threadcount):
+  #  #thread_.stop()
+  #  cons[i].commit()  
    #for i in range(0,threadcount):
    # cons[i].commit()
    #con.commit()
