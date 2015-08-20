@@ -158,7 +158,7 @@ def main():
   #global curs
   #global exitflag
   #global th
-  threadcount=3
+  threadcount=2
   cons={}
   curs={}
   queue=Queue()
@@ -242,15 +242,22 @@ def main():
   #LOCK.release()
   #queue.join()
   #print str(queue.full())
+  #con=fdb.connect (host='localhost', database='zagz', user='SYSDBA', password='vSyWIFgg7',charset='WIN1251')
+   #prm={host='localhost', database='zagz', user='SYSDBA', password='vSyWIFgg7',charset='WIN1251'}
+  #with Profiler() as p:
+  Process(target=worker, args=(i, curs,prm)).start() 
   for i in range(1,threadcount):
    Process(target=worker, args=(i, curs,queue)).start()
+   #Process(target=worker, args=(i, curs,prm)).start()
   with Profiler() as p:
    while not queue.empty():#threading.active_count() >1:
-   #До тех пор, пока количество активных потоков больше 1 (значит, 
-   #запущенные потоки продолжают работу)
+    #for i in range(1,threadcount):
+    # worker (i,curs,queue)
+    #До тех пор, пока количество активных потоков больше 1 (значит, 
+    #запущенные потоки продолжают работу)
     time.sleep(5)
     print queue.qsize()
-   #Основной поток засыпает на 1 секунду
+    #Основной поток засыпает на 1 секунду
   print "FINISHED"
   exitflag=True
   st= u"Меряем коммит"
