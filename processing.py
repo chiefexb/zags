@@ -1,5 +1,6 @@
 #!/usr/bin/python
 #coding: utf8
+#m2
 from lxml import etree
 import sys
 from os import *
