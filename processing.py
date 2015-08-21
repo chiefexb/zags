@@ -28,6 +28,7 @@ flds={"ID":0,
 #exitflag=False
 #th=0
 #curs={}
+#test
 from multiprocessing import Process, Lock,Queue
 def getgenerator(cur,gen):
  sq="SELECT GEN_ID("+gen+", 1) FROM RDB$DATABASE"
