@@ -167,7 +167,6 @@ def main():
     #sq3="select * from docipdoc where upper(docipdoc.id_dbtr_fullname)="+quoted(rr[0]) +" and docipdoc.id_dbtr_born="+quoted(str(rr[1]))
     sq3="INSERT INTO REESTR (ID, ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_BORN) VALUES (?, ?, ?, ?, ?, ?)" 
     #print rr[4], type (rr[4])
-    #curs[0].exec
     sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(id)+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[0])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[4].strftime("%d.%m.%Y") ) )
     #print sq4
     cur.execute(sq3,r2)
@@ -175,13 +174,11 @@ def main():
     #stt.append(sq4)
     #print queue.qsize()
   #with Profiler() as p:
-  #Process(target=worker, args=(i, curs,prm)).start()
   #Иницилизация
-  with Profiler() as p:
-    #Основной поток засыпает на 1 секунду
-  exitflag=True
   st= u"Меряем коммит"
   inform(st)
+  with Profiler() as p:
+   con.commit()
   #st= u"Найдено "+unicode(len(stt))
   #inform(st)
   
