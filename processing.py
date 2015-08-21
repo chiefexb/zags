@@ -22,7 +22,7 @@ flds={"ID":0,
 "IP_EXEC_PRIST_NAME":9,
 "STATUS":10}
 #from Queue import Queue
-#import threading
+##import threading
 #LOCK = threading.RLock()
 #queue = Queue()
 #exitflag=False
