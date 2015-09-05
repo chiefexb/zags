@@ -133,7 +133,7 @@ def main():
   #except  Exception, e:
   # print("Ошибка при открытии базы данных:\n"+str(e))
   # sys.exit(2)
-  #cur2 = con2.cursor()
+  #cur2 = con.cursor()
   #cur2 = con2.cursor()  
   st=u"Начинаем группировку должников"
   inform(st)
@@ -161,16 +161,17 @@ def main():
   with Profiler() as p:
    stt=[]
    for rr in r:
+    
     id=getgenerator(cur,"GEN_R")
     r2=[id]
     r2.extend(rr)
     #sq3="select * from docipdoc where upper(docipdoc.id_dbtr_fullname)="+quoted(rr[0]) +" and docipdoc.id_dbtr_born="+quoted(str(rr[1]))
     sq3="INSERT INTO REESTR (ID, ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_BORN) VALUES (?, ?, ?, ?, ?, ?)" 
     #print rr[4], type (rr[4])
-    sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(id)+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[0])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[4].strftime("%d.%m.%Y") ) )
+    #sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(id)+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[0])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[4].strftime("%d.%m.%Y") ) )
     #print sq4
     cur.execute(sq3,r2)
-    #cur2.execute(sq4)
+    #cur.execute(sq4)
     #stt.append(sq4)
     #print queue.qsize()
   #with Profiler() as p:
@@ -182,10 +183,36 @@ def main():
   #st= u"Найдено "+unicode(len(stt))
   #inform(st)
   
-  #st= u"Проставляем связи в таблицах исходной и группированной"
-  #inform(st)
+  st= u"Проставляем связи в таблицах исходной и группированной.Загоняем результат в буфер."
+  inform(st)
   #print stt[0]
-  #with Profiler() as p:
+  stt=[]
+  with Profiler() as p:
+   sq4="select reestr.id ,docipdoc.id from  reestr join docipdoc on  UPPER(DOCIPDOC.ID_DBTR_FULLNAME)=reestr.id_dbtr_fullname and  docipdoc.id_dbtr_born=reestr.id_dbtr_born"
+   cur.execute(sq4)
+   for raw in cur:
+    sq5="update DOCIPDOC SET STATUS=1, FK="+str(raw[0])+" where id="+str(raw[1])
+    stt.append(sq5)
+    #cur2.execute(sq5)
+  st= u"Загрузка запросов:"+unicode(str(len(stt)))
+  inform(st)
+  with Profiler() as p:
+   for rr in stt:
+    try:
+     cur.execute(rr)
+     print rr
+     sys.exit(2)
+     print stt
+    except Exception, e:
+     print("Ошибка при открытии базы данных:\n"+str(e))
+     sys.exit(2)
+     
+     print stt
+  st= u"Меряем коммит"
+  inform(st)
+  #print stt[0]
+  with Profiler() as p:
+   con.commit()
   # for rr in stt:
   #   cur2.execute(rr)
    #con2.commit()
