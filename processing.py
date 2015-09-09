@@ -286,8 +286,8 @@ def main():
     sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(rr[0])+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[1])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[5].strftime("%d.%m.%Y") ) )
    
     sq5="UPDATE REESTR SET STATUS=1, ZAPROS_ID="+str(zap)+", FILENAME="+quoted(fn)
-    print sq4
-    print sq5
+    #print sq4
+    #print sq5
     cur2.execute(sq4)
     cur2.execute(sq5)
     for mm in matr:
