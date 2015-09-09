@@ -11,16 +11,12 @@ import time
 from odsmod import *
 import xlwt
 flds={"ID":0,
-"DOC_NUMBER":1,
-"ID_DBTR_FULLNAME":2,
-"ID_DBTR_FIRSTNAME":3,
-"ID_DBTR_SECONDNAME":4,
-"ID_DBTR_LASTNAME":5,
-"ID_DBTR_BORN":6,
-"ID_DEBTSUM":7,
-"DOCSTATUSID":8,
-"IP_EXEC_PRIST_NAME":9,
-"STATUS":10}
+"ID":0,
+"ID_DBTR_FULLNAME":1,
+"ID_DBTR_FIRSTNAME":2,
+"ID_DBTR_SECONDNAME":3,
+"ID_DBTR_LASTNAME":4,
+"ID_DBTR_BORN":5}
 #from Queue import Queue
 #import threading
 #LOCK = threading.RLock()
@@ -142,9 +138,9 @@ def main():
   r=cur.fetchall()
   lb=int(r[0][0])
   #print lb
-  sq2="select upper(d.id_dbtr_fullname),  (select first 1 id_dbtr_firstname from docipdoc), (select first 1 id_dbtr_secondname from docipdoc), (select first 1 id_dbtr_lastname from docipdoc), d.id_dbtr_born from docipdoc d group by upper( d.id_dbtr_fullname),d.id_dbtr_born"
-  #"select upper(docipdoc.id_dbtr_fullname), docipdoc.id_dbtr_born from docipdoc
-  # group by upper( docipdoc.id_dbtr_fullname),docipdoc.id_dbtr_born"
+  sq2="select upper(d.id_dbtr_fullname), d.id_dbtr_born from docipdoc d group by upper( d.id_dbtr_fullname),d.id_dbtr_born"
+#"select upper(d.id_dbtr_fullname),  (select first 1 id_dbtr_firstname from docipdoc where  upper(d.id_dbtr_fullname)=upper(docipdoc.id_dbtr_fullname)) ,(select first 1 id_dbtr_secondname from docipdoc where  upper(d.id_dbtr_fullname)=upper(docipdoc.id_dbtr_fullname) ),(select first 1 id_dbtr_lastname from docipdoc where  upper(d.id_dbtr_fullname)=upper(docipdoc.id_dbtr_fullname)) ,d.id_dbtr_born from docipdoc d group by upper( d.id_dbtr_fullname),d.id_dbtr_born"
+#"select upper(d.id_dbtr_fullname),  (select first 1 id_dbtr_firstname from docipdoc), (select first 1 id_dbtr_secondname from docipdoc), (select first 1 id_dbtr_lastname from docipdoc), d.id_dbtr_born from docipdoc d group by upper( d.id_dbtr_fullname),d.id_dbtr_born"  #"select upper(docipdoc.id_dbtr_fullname), docipdoc.id_dbtr_born from docipdoc  # group by upper( docipdoc.id_dbtr_fullname),docipdoc.id_dbtr_born"
   st=u"Меряем время скрипта группировки"
   inform(st)
   with Profiler() as p:
@@ -161,10 +157,19 @@ def main():
   with Profiler() as p:
    stt=[]
    for rr in r:
-    
+    rs=(rr[0]).split(' ') 
     id=getgenerator(cur,"GEN_R")
     r2=[id]
-    r2.extend(rr)
+    #print rs
+    r2.extend( [rr[0]] )
+    r2.extend( [rs[0] ])
+    r2.extend( [rs[1] ])
+    try:
+     r2.extend( [rs[2] ] )
+    except:
+     r2.extend( [None] )
+    #print r2,rr[1]
+    r2.extend( [rr[1]] ) 
     #sq3="select * from docipdoc where upper(docipdoc.id_dbtr_fullname)="+quoted(rr[0]) +" and docipdoc.id_dbtr_born="+quoted(str(rr[1]))
     sq3="INSERT INTO REESTR (ID, ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_BORN) VALUES (?, ?, ?, ?, ?, ?)" 
     #print rr[4], type (rr[4])
@@ -183,36 +188,36 @@ def main():
   #st= u"Найдено "+unicode(len(stt))
   #inform(st)
   
-  st= u"Проставляем связи в таблицах исходной и группированной.Загоняем результат в буфер."
-  inform(st)
+ # st= u"Проставляем связи в таблицах исходной и группированной.Загоняем результат в буфер."
+ # inform(st)
   #print stt[0]
-  stt=[]
-  with Profiler() as p:
-   sq4="select reestr.id ,docipdoc.id from  reestr join docipdoc on  UPPER(DOCIPDOC.ID_DBTR_FULLNAME)=reestr.id_dbtr_fullname and  docipdoc.id_dbtr_born=reestr.id_dbtr_born"
-   cur.execute(sq4)
-   for raw in cur:
-    sq5="update DOCIPDOC SET STATUS=1, FK="+str(raw[0])+" where id="+str(raw[1])
-    stt.append(sq5)
+ # stt=[]
+ # with Profiler() as p:
+ #  sq4="select reestr.id ,docipdoc.id from  reestr join docipdoc on  UPPER(DOCIPDOC.ID_DBTR_FULLNAME)=reestr.id_dbtr_fullname and  docipdoc.id_dbtr_born=reestr.id_dbtr_born"
+ #  cur.execute(sq4)
+ #  for raw in cur:
+ #   sq5="update DOCIPDOC SET STATUS=1, FK="+str(raw[0])+" where id="+str(raw[1])
+ #   stt.append(sq5)
     #cur2.execute(sq5)
-  st= u"Загрузка запросов:"+unicode(str(len(stt)))
-  inform(st)
-  with Profiler() as p:
-   for rr in stt:
-    try:
-     cur.execute(rr)
-     print rr
-     sys.exit(2)
-     print stt
-    except Exception, e:
-     print("Ошибка при открытии базы данных:\n"+str(e))
-     sys.exit(2)
-     
-     print stt
-  st= u"Меряем коммит"
-  inform(st)
+ # st= u"Загрузка запросов:"+unicode(str(len(stt)))
+ # inform(st)
+ # with Profiler() as p:
+ #  for rr in stt:
+ #   try:
+ #    cur.execute(rr)
+ #    print rr
+ #    sys.exit(2)
+ #    print stt
+ #   except Exception, e:
+ #    print("Ошибка при открытии базы данных:\n"+str(e))
+ #    sys.exit(2)
+ #    
+ #    print stt
+ # st= u"Меряем коммит"
+ # inform(st)
   #print stt[0]
-  with Profiler() as p:
-   con.commit()
+ # with Profiler() as p:
+ #  con.commit()
   # for rr in stt:
   #   cur2.execute(rr)
    #con2.commit()
@@ -224,12 +229,12 @@ def main():
   #print len(t) 
  if sys.argv[1]=='get':
   #print sys.argv[2],sys.argv[3]
-  try:
-   osp=sys.argv[2]
-  except :
-   st=u"Не указан отдел"
-   inform(st)
-   sys.exit(2)
+  #try:
+  # osp=sys.argv[2]
+  #except :
+  # st=u"Не указан отдел"
+  # inform(st)
+  # sys.exit(2)
 
   #print osp+'0000000000'
   #print str(int(osp)+1)+'0000000000'
@@ -239,12 +244,13 @@ def main():
    print("Ошибка при открытии базы данных:\n"+str(e))
    sys.exit(2)
   cur = con.cursor()
-  cur2=con.cursor()
-  sq1='select * from DOCIPDOC where id>='+osp+'0000000000 and id<'+str(int(osp)+1)+'0000000000 and status=0'
+  cur2= con.cursor()
+  #sq1='select * from DOCIPDOC where id>='+osp+'0000000000 and id<'+str(int(osp)+1)+'0000000000 and status=0'
+  sq1='select * from reestr where (status is null or status=0)'
   cur.execute(sq1)
   r=cur.fetchall()
   try:
-   cnt=int(sys.argv[3])
+   cnt=int(sys.argv[2])
   except:
    st=u"Не указано количество сделаю полную выборку."
    inform(st)
@@ -252,7 +258,7 @@ def main():
   #print sys.argv[3]
   if cnt>len(r):
    cnt=len(r)
-  st=u"Для отдела "+ osp + u" найдено "+unicode(str(len(r)))+u" записей для выгрузки."
+  st=u"Найдено "+unicode(str(len(r)))+u" записей для выгрузки."
   inform(st)
   st=u"Будет выгружено " +unicode(str(cnt)) +u" записей."
   inform(st)
@@ -271,6 +277,19 @@ def main():
    i=0
    for i in range(0,cnt):
     cl=0
+    rr=r[i]
+    dd=datetime.now()
+    zap=getgenerator(cur,"GEN_ZAP")
+    fn= str(zap)+'_'+dd.strftime("%d_%m_%Y") +'.xls'
+    #print rr[5]
+    
+    sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(rr[0])+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[1])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[5].strftime("%d.%m.%Y") ) )
+   
+    sq5="UPDATE REESTR SET STATUS=1, ZAPROS_ID="+str(zap)+", FILENAME="+quoted(fn)
+    print sq4
+    print sq5
+    cur2.execute(sq4)
+    cur2.execute(sq5)
     for mm in matr:
      if str(type(r[i][flds[mm]]))=="<type 'datetime.date'>":
       ws.write(rw, cl,r[i][flds[mm]],style1)
@@ -279,7 +298,12 @@ def main():
      cl+=1 
     rw+=1
     i+=1
-   wb.save(output_path+osp+".xls")
+   wb.save(output_path+fn)
+  st=u"Меряем коммит"
+  inform(st)
+  with Profiler() as p:
+   con.commit()
+
  if sys.argv[1]=='delete':
   try:
    con = fdb.connect (host=main_host, database=main_dbname, user=main_user,  password=main_password,charset='WIN1251')
