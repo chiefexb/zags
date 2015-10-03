@@ -275,17 +275,19 @@ def main():
    style1 = xlwt.XFStyle()
    style1.num_format_str = 'DD.MM.YY'
    i=0
+   dd=datetime.now()
+   zap=getgenerator(cur,"GEN_ZAP")
+   fn= str(zap)+'_'+dd.strftime("%d_%m_%Y") +'.xls'
    for i in range(0,cnt):
     cl=0
     rr=r[i]
-    dd=datetime.now()
-    zap=getgenerator(cur,"GEN_ZAP")
-    fn= str(zap)+'_'+dd.strftime("%d_%m_%Y") +'.xls'
-    #print rr[5]
+    #dd=datetime.now()
+    #zap=getgenerator(cur,"GEN_ZAP")
+    print i
     
     sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(rr[0])+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[1])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[5].strftime("%d.%m.%Y") ) )
    
-    sq5="UPDATE REESTR SET STATUS=1, ZAPROS_ID="+str(zap)+", FILENAME="+quoted(fn)
+    sq5="UPDATE REESTR SET STATUS=1, ZAPROS_ID="+str(zap)+", FILENAME="+quoted(fn)+' where id='+str(rr[0])
     #print sq4
     #print sq5
     cur2.execute(sq4)
