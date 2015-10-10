@@ -334,7 +334,7 @@ def main():
   inform(st)
   #answ_id
   #id
-  sq="INSERT INTO ANSWERS (ID, FSUBJFAM, FSUBJNAME, FSUBJOTCH, FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, NUMSV2, DATESV, DATESV2, FAMSUB1, NAMESUB1, OTCHSUB1, FAMSUB1P, NAMESUB1P, OTCHSUB1P, POLSUB1, DATERSUB1, MESTORSUB1, DOCSUB1, NATIONSUB1, GRAJDSUB1, MESTOLSUB1, FAMSUB2, NAMESUB2, OTCHSUB2, FAMSUB2P, NAMESUB2P, POLSUB2, DATERSUB2, MESTORSUB2, DOCSUB2, NATIONSUB2, GRAJDSUB2, MESTOLSUB2, FAMSUB3, NAMESUB3, OTCHSUB3, POLSUB3, DATERSUB3, MESTORSUB3, DOCSUB3, NATIONSUB3, GRAJDSUB3, MESTOLSUB3, FAMSUB4, NAMESUB4, OTCHSUB4, POLSUB4, DATERSUB4, MESTORSUB4, DOCSUB4, NATIONSUB4, GRAJDSUB4, MESTOLSUB4, FAMSUB5, NAMESUB5, OTCHSUB5, POLSUB5, DATERSUB5, MESTORSUB5, DOCSUB5, NATIONSUB5, GRAJDSUB5, MESTOLSUB5, DATESM, MESTOSM, PRICHSM, ANSWER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  sq="INSERT INTO ANSWERS (ID, FSUBJFAM, FSUBJNAME, FSUBJOTCH, FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, NUMSV2, DATESV, DATESV2, FAMSUB1, NAMESUB1, OTCHSUB1, FAMSUB1P, NAMESUB1P, OTCHSUB1P, POLSUB1, DATERSUB1, MESTORSUB1, DOCSUB1, NATIONSUB1, GRAJDSUB1, MESTOLSUB1, FAMSUB2, NAMESUB2, OTCHSUB2, FAMSUB2P, NAMESUB2P, OTCHSUB2P, POLSUB2, DATERSUB2, MESTORSUB2, DOCSUB2, NATIONSUB2, GRAJDSUB2, MESTOLSUB2, FAMSUB3, NAMESUB3, OTCHSUB3, POLSUB3, DATERSUB3, MESTORSUB3, DOCSUB3, NATIONSUB3, GRAJDSUB3, MESTOLSUB3, FAMSUB4, NAMESUB4, OTCHSUB4, POLSUB4, DATERSUB4, MESTORSUB4, DOCSUB4, NATIONSUB4, GRAJDSUB4, MESTOLSUB4, FAMSUB5, NAMESUB5, OTCHSUB5, POLSUB5, DATERSUB5, MESTORSUB5, DOCSUB5, NATIONSUB5, GRAJDSUB5, MESTOLSUB5, DATESM, MESTOSM, PRICHSM, ANSWER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   print input_path
   st=u'Начало процесса загрузки, файлов для обработки:'+str( len(listdir(input_path) ))
   logging.info( st )
@@ -346,20 +346,32 @@ def main():
     print str(e),"ERR FILE"
     #sys.exit(2)
    #Конвертация данных
-   r=db[0]
-   id=1;
-   answerid=2
-   answ=[]
-   print len(db.fieldNames)
-   print (db.fieldNames)
-   answ.append(id)
-   for i in range (0,len(db.fieldNames)):
-    print i+2, db.fieldNames[i]
-    answ.append( str(r[i]).decode('CP866'))
-   answ.append(answerid)
-   print answ
-   cur.execute(sq,answ)
+   #r=db[0]
+   answerid=getgenerator(cur,"GEN_ANSWER_ID")
+   for r in db:
+    id=getgenerator(cur,"GEN_ANSW")
+    answ=[]
+    #print len(db.fieldNames)
+    #print (db.fieldNames)
+    answ.append(id)
+    for i in range (0,len(db.fieldNames)):
+     #print i+2, db.fieldNames[i]
+     if 'DATE' in db.fieldNames[i]:
+      try:
+       dd=datetime.strptime(r[i],"%d.%m.%Y")
+      except:
+       dd=None
+      answ.append( dd)
+     else:
+      answ.append( str(r[i]).decode('CP866'))
+      print i+2,'|',db.fieldNames[i], "|", str(len(str(r[i]).decode('CP866') )) ,"|",str(r[i]).decode('CP866')
+    answ.append(answerid)
+    print answ
+    cur.execute(sq,answ)
    #print str(db[0]).decode('CP866')
+   con.commit()
+   con.close()
   #with Profiler() as p:
+   
 if __name__ == "__main__":
     main()
