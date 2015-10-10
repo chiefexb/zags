@@ -10,6 +10,7 @@ import timeit
 import time
 from odsmod import *
 import xlwt
+from dbfpy import dbf
 flds={"ID":0,
 "ID":0,
 "ID_DBTR_FULLNAME":1,
@@ -83,6 +84,10 @@ def main():
  nd=xmlroot.find('output_path2')
  output_type=xmlroot.find('output_type').text
  output_path2=nd.text
+
+ nd=xmlroot.find('input_path')
+ input_path=nd.text
+
  sq1="SELECT  doc_ip_doc.id , document.doc_number, trim(doc_ip_doc.id_dbtr_name),entity.entt_firstname,entity.entt_patronymic, entity.entt_surname,doc_ip_doc.id_dbtr_born, doc_ip.id_debtsum, document.docstatusid, doc_ip.ip_exec_prist_name FROM DOC_IP_DOC DOC_IP_DOC JOIN DOC_IP ON DOC_IP_DOC.ID=DOC_IP.ID JOIN DOCUMENT ON DOC_IP.ID=DOCUMENT.ID join entity on doc_ip.id_dbtr=entity.entt_id   where document.docstatusid=9      and DOC_IP_DOC.ID_DBTR_ENTID IN (2,71,95,96,97,666) and doc_ip_doc.id_dbtr_born is not null and  doc_ip_doc.id_dbtr_born >='01.01.1900'"
  if sys.argv[1]=='loadrbd':
   try:
@@ -318,5 +323,43 @@ def main():
   with Profiler() as p:  
    cur.execute ("delete from docipdoc" )
    con.commit()  
+ if sys.argv[1]=='upload':
+  try:
+   con = fdb.connect (host=main_host, database=main_dbname, user=main_user,  password=main_password,charset='WIN1251')   
+  except  Exception, e:
+   print("Ошибка при открытии базы данных:\n"+str(e))
+   sys.exit(2)
+  cur = con.cursor()
+  st=u"Загрузка файлов ответов."
+  inform(st)
+  #answ_id
+  #id
+  sq="INSERT INTO ANSWERS (ID, FSUBJFAM, FSUBJNAME, FSUBJOTCH, FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, NUMSV2, DATESV, DATESV2, FAMSUB1, NAMESUB1, OTCHSUB1, FAMSUB1P, NAMESUB1P, OTCHSUB1P, POLSUB1, DATERSUB1, MESTORSUB1, DOCSUB1, NATIONSUB1, GRAJDSUB1, MESTOLSUB1, FAMSUB2, NAMESUB2, OTCHSUB2, FAMSUB2P, NAMESUB2P, POLSUB2, DATERSUB2, MESTORSUB2, DOCSUB2, NATIONSUB2, GRAJDSUB2, MESTOLSUB2, FAMSUB3, NAMESUB3, OTCHSUB3, POLSUB3, DATERSUB3, MESTORSUB3, DOCSUB3, NATIONSUB3, GRAJDSUB3, MESTOLSUB3, FAMSUB4, NAMESUB4, OTCHSUB4, POLSUB4, DATERSUB4, MESTORSUB4, DOCSUB4, NATIONSUB4, GRAJDSUB4, MESTOLSUB4, FAMSUB5, NAMESUB5, OTCHSUB5, POLSUB5, DATERSUB5, MESTORSUB5, DOCSUB5, NATIONSUB5, GRAJDSUB5, MESTOLSUB5, DATESM, MESTOSM, PRICHSM, ANSWER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  print input_path
+  st=u'Начало процесса загрузки, файлов для обработки:'+str( len(listdir(input_path) ))
+  logging.info( st )
+  
+  for ff in listdir(input_path):
+   try:
+    db=dbf.Dbf(input_path+ff)
+   except Exception, e:
+    print str(e),"ERR FILE"
+    #sys.exit(2)
+   #Конвертация данных
+   r=db[0]
+   id=1;
+   answerid=2
+   answ=[]
+   print len(db.fieldNames)
+   print (db.fieldNames)
+   answ.append(id)
+   for i in range (0,len(db.fieldNames)):
+    print i+2, db.fieldNames[i]
+    answ.append( str(r[i]).decode('CP866'))
+   answ.append(answerid)
+   print answ
+   cur.execute(sq,answ)
+   #print str(db[0]).decode('CP866')
+  #with Profiler() as p:
 if __name__ == "__main__":
     main()
