@@ -364,14 +364,14 @@ def main():
       answ.append( dd)
      else:
       answ.append( str(r[i]).decode('CP866'))
-      print i+2,'|',db.fieldNames[i], "|", str(len(str(r[i]).decode('CP866') )) ,"|",str(r[i]).decode('CP866')
+      #print i+2,'|',db.fieldNames[i], "|", str(len(str(r[i]).decode('CP866') )) ,"|",str(r[i]).decode('CP866')
     answ.append(answerid)
-    print answ
+    #print answ
     cur.execute(sq,answ)
    #print str(db[0]).decode('CP866')
    con.commit()
    con.close()
   #with Profiler() as p:
-   
+#select * from reestr reestr join answers on  (reestr.id=cast(answers.fsubjaddit as bigint))   
 if __name__ == "__main__":
     main()
