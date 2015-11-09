@@ -373,5 +373,7 @@ def main():
    con.close()
   #with Profiler() as p:
 #select * from reestr reestr join answers on  (reestr.id=cast(answers.fsubjaddit as bigint))   
+ if sys.argv[1]=='process':
+ if sys.argv[1]=='download':
 if __name__ == "__main__":
     main()
