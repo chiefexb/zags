@@ -374,6 +374,13 @@ def main():
   #with Profiler() as p:
 #select * from reestr reestr join answers on  (reestr.id=cast(answers.fsubjaddit as bigint))   
  if sys.argv[1]=='process':
+  try:
+   con = fdb.connect (host=main_host, database=main_dbname, user=main_user,  pa$
+  except  Exception, e:
+   print("Ошибка при открытии базы данных:\n"+str(e))
+   sys.exit(2)
+  cur = con.cursor()
+  
  if sys.argv[1]=='download':
 if __name__ == "__main__":
     main()
