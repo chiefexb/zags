@@ -261,6 +261,7 @@ def main():
    inform(st)
    cnt=len(r)
   #print sys.argv[3]
+  print len(r)
   if cnt>len(r):
    cnt=len(r)
   st=u"Найдено "+unicode(str(len(r)))+u" записей для выгрузки."
@@ -283,12 +284,13 @@ def main():
    dd=datetime.now()
    zap=getgenerator(cur,"GEN_ZAP")
    fn= str(zap)+'_'+dd.strftime("%d_%m_%Y") +'.xls'
+   print "Z", fn
    for i in range(0,cnt):
     cl=0
     rr=r[i]
     #dd=datetime.now()
     #zap=getgenerator(cur,"GEN_ZAP")
-    print i
+    #print i
     
     sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(rr[0])+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[1])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[5].strftime("%d.%m.%Y") ) )
    
@@ -375,12 +377,45 @@ def main():
 #select * from reestr reestr join answers on  (reestr.id=cast(answers.fsubjaddit as bigint))   
  if sys.argv[1]=='process':
   try:
-   con = fdb.connect (host=main_host, database=main_dbname, user=main_user,  pa$
+   con = fdb.connect (host=main_host, database=main_dbname, user=main_user, password=main_password,charset='WIN1251')
   except  Exception, e:
    print("Ошибка при открытии базы данных:\n"+str(e))
    sys.exit(2)
   cur = con.cursor()
-  
+  with Profiler() as p:
+   sq='select FSUBJFAM, FSUBJNAME, FSUBJOTCH,FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, MESTOLSUB1, DATESM, MESTOSM, PRICHSM,docipdoc.id,docipdoc.doc_number,docipdoc.id_dbtr_fullname,answers.id,reestr.zapros_id  from docipdoc join reestr on reestr.id=docipdoc.fk   join answers  on (reestr.id=answers.fsubjaddit) where docipdoc.fk in (select reestr.id  from answers  join reestr on reestr.id=answers.fsubjaddit where answers.datesm is not null and answers.status is null)'
+   sq2='select count (id) from answers where answers.status is null'
+   sq3='INSERT INTO ANSWERS_OSP (ID, FSUBJFAM, FSUBJNAME, FSUBJOTCH, FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, MESTOLSUB1, DATESM, MESTOSM, PRICHSM, IP_ID, DOC_NUMBER, ID_DBTR_FULLNAME, ANSWER_ID, ZAPROS_ID, STATUS) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+   sq4='update answers  set status=2 where answers.id in (select  answers.id from answers  join reestr on reestr.id=answers.fsubjaddit where answers.datesm is not  null  and answers.status is null)'
+   sq5='update answers  set status=1 where answers.id in (select  answers.id from answers  join reestr on reestr.id=answers.fsubjaddit where answers.datesm is   null  and answers.status is null)' 
+   st=u'Начало процесса сверки. Объединяем положительные ответы '
+   logging.info( st )
+   cur.execute(sq2)
+   l=cur.fetchone()[0]
+   cur.execute(sq)
+   r=cur.fetchall()
+   st=u'Найдено положительных ответов '+unicode (len(r))+u' из '+unicode(l) +'.'
+   inform( st )
+   for rr in r:
+    id=getgenerator(cur,'GEN_OSP')
+    r2=[]
+    r2.append(id)
+    r2.extend(rr)
+    r2.append(0)
+    #for ii in range(0,len(r2)):
+    # print ii+1 ,r2[ii]
+    cur.execute(sq3,r2)
+   con.commit()
+   st=u'Отмечаем положительные и отрицательные ответы как обработанные'
+   inform( st )
+   cur.execute (sq4)
+   cur.execute(sq5)
+   con.commit()
+   con.close()
+    
+    #for ii in range(0,len(r2)):
+    # print ii+2 ,r2[ii]
  if sys.argv[1]=='download':
+  print
 if __name__ == "__main__":
     main()
