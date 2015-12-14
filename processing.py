@@ -424,6 +424,7 @@ def main():
   cur = con.cursor()
   sq='select answers_osp.osp from answers_osp where answers_osp.status =0 group by answers_osp.osp'
   sq2='select answers_osp.id, answers_osp.ip_id,answers_osp.packet_id,answers_osp.doc_number,answers_osp.id_dbtr_fullname,answers_osp.nametypeaz,answers_osp.namezags,answers_osp.numaz,answers_osp.numsv,answers_osp.mestolsub1,answers_osp.datesm,answers_osp.mestosm,answers_osp.prichsm from answers_osp where osp='
+  #sq3='update answers_osp set status=1, packet'
   cur.execute(sq)
   p=cur.fetchall()
   ff=['id', 'ip_id','osp.packet_id','doc_number','id_dbtr_fullname','nametypeaz','namezags','numaz','numsv','mestolsub1','datesm','mestosm','prichsm']
@@ -434,8 +435,8 @@ def main():
    except:
     print output_path2+datedir
    for pp in p: 
-    #packet_id=getgenerator(cur,'GEN_PACK')
-    packet_id=1
+    packet_id=getgenerator(cur,'GEN_PACK')
+    #packet_id=1
     
     d=datetime.now().strftime('%d.%m.%y')
     df=datetime.now().strftime('%Y_%m_%d')
@@ -447,14 +448,19 @@ def main():
     cur.execute(sq2+pp[0])
     r=cur.fetchall()
     root=etree.Element('answers')
-    root2=etree.SubElement(root,'answer')
     for j in range(0,len(r)):
+     sq3='update answers_osp set status=1, packet_id='+str(packet_id)+' , filename='+quoted(fn)+' where id='+str(r[j][0]) 
+     cur.execute(sq3)
+     print sq3
+     root2=etree.SubElement(root,'answer') 
      row=(r[j][3], r[j][4], r[j][5], r[j][6], r[j][7], r[j][8], r[j][9], r[j][10].strftime('%d.%m.%y'), r[j][11], r[j][12]  )
      table=addrow(row,table,tablecontents)
+     el=etree.SubElement(root2,'packet_id')
+     el.text=unicode( unicode(packet_id) )
      for i in range(0, len(r[j])):
       el=etree.SubElement(root2,ff[i])
       el.text=unicode( r[j][i] )
-
+    con.commit() 
     savetable(table,textdoc,output_path2+'/'+datedir+'/'+fn2)
     xml= etree.tostring(root, pretty_print=True, encoding='UTF-8', xml_declaration=True)
     print output_path+fn,xml
