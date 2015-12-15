@@ -423,11 +423,11 @@ def main():
    sys.exit(2)
   cur = con.cursor()
   sq='select answers_osp.osp from answers_osp where answers_osp.status =0 group by answers_osp.osp'
-  sq2='select answers_osp.id, answers_osp.ip_id,answers_osp.packet_id,answers_osp.doc_number,answers_osp.id_dbtr_fullname,answers_osp.nametypeaz,answers_osp.namezags,answers_osp.numaz,answers_osp.numsv,answers_osp.mestolsub1,answers_osp.datesm,answers_osp.mestosm,answers_osp.prichsm from answers_osp where osp='
+  sq2='select answers_osp.id, answers_osp.ip_id,answers_osp.packet_id,answers_osp.doc_number,answers_osp.id_dbtr_fullname,answers_osp.nametypeaz,answers_osp.namezags,answers_osp.numaz,dateaz,answers_osp.numsv,answers_osp.mestolsub1,answers_osp.datesm,answers_osp.mestosm,answers_osp.prichsm from answers_osp where osp='
   #sq3='update answers_osp set status=1, packet'
   cur.execute(sq)
   p=cur.fetchall()
-  ff=['id', 'ip_id','osp.packet_id','doc_number','id_dbtr_fullname','nametypeaz','namezags','numaz','numsv','mestolsub1','datesm','mestosm','prichsm']
+  ff=['id', 'ip_id','packet_id','doc_number','id_dbtr_fullname','nametypeaz','namezags','numaz','dateaz','numsv','mestolsub1','datesm','mestosm','prichsm']
   if len(p)>0:
    datedir=datetime.now().strftime('%d_%m_%Y')
    try:
@@ -453,7 +453,8 @@ def main():
      cur.execute(sq3)
      print sq3
      root2=etree.SubElement(root,'answer') 
-     row=(r[j][3], r[j][4], r[j][5], r[j][6], r[j][7], r[j][8], r[j][9], r[j][10].strftime('%d.%m.%y'), r[j][11], r[j][12]  )
+     row=(r[j][3], r[j][4], r[j][5], r[j][6], r[j][7], r[j][8].strftime('%d.%m.%y'), r[j][9], r[j][10], r[j][11].strftime('%d.%m.%y'), r[j][12], r[j][13]  )
+     print row
      table=addrow(row,table,tablecontents)
      el=etree.SubElement(root2,'packet_id')
      el.text=unicode( unicode(packet_id) )
