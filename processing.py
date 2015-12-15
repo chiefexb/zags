@@ -456,11 +456,16 @@ def main():
      row=(r[j][3], r[j][4], r[j][5], r[j][6], r[j][7], r[j][8].strftime('%d.%m.%y'), r[j][9], r[j][10], r[j][11].strftime('%d.%m.%y'), r[j][12], r[j][13]  )
      print row
      table=addrow(row,table,tablecontents)
-     el=etree.SubElement(root2,'packet_id')
-     el.text=unicode( unicode(packet_id) )
+     #el=etree.SubElement(root2,'packet_id')
+     #el.text=unicode( unicode(packet_id) )
+     #ff['packet_id']=unicode(packet_id)
      for i in range(0, len(r[j])):
-      el=etree.SubElement(root2,ff[i])
-      el.text=unicode( r[j][i] )
+      if ff[i]=='packet_id':
+       el=etree.SubElement(root2,'packet_id')
+       el.text=unicode( unicode(packet_id) )
+      else:
+       el=etree.SubElement(root2,ff[i])
+       el.text=unicode( r[j][i] )
     con.commit() 
     savetable(table,textdoc,output_path2+'/'+datedir+'/'+fn2)
     xml= etree.tostring(root, pretty_print=True, encoding='UTF-8', xml_declaration=True)
