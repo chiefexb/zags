@@ -90,7 +90,8 @@ def main():
 
  nd=xmlroot.find('input_path')
  input_path=nd.text
-
+ nd=xmlroot.find('input_arc_path')
+ input_arc_path =nd.text
  sq1="SELECT  doc_ip_doc.id , document.doc_number, trim(doc_ip_doc.id_dbtr_name),entity.entt_firstname,entity.entt_patronymic, entity.entt_surname,doc_ip_doc.id_dbtr_born, doc_ip.id_debtsum, document.docstatusid, doc_ip.ip_exec_prist_name FROM DOC_IP_DOC DOC_IP_DOC JOIN DOC_IP ON DOC_IP_DOC.ID=DOC_IP.ID JOIN DOCUMENT ON DOC_IP.ID=DOCUMENT.ID join entity on doc_ip.id_dbtr=entity.entt_id   where document.docstatusid=9      and DOC_IP_DOC.ID_DBTR_ENTID IN (2,71,95,96,97,666) and doc_ip_doc.id_dbtr_born is not null and  doc_ip_doc.id_dbtr_born >='01.01.1900'"
  if sys.argv[1]=='loadrbd':
   try:
@@ -339,43 +340,50 @@ def main():
   inform(st)
   #answ_id
   #id
-  sq="INSERT INTO ANSWERS (ID, FSUBJFAM, FSUBJNAME, FSUBJOTCH, FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, NUMSV2, DATESV, DATESV2, FAMSUB1, NAMESUB1, OTCHSUB1, FAMSUB1P, NAMESUB1P, OTCHSUB1P, POLSUB1, DATERSUB1, MESTORSUB1, DOCSUB1, NATIONSUB1, GRAJDSUB1, MESTOLSUB1, FAMSUB2, NAMESUB2, OTCHSUB2, FAMSUB2P, NAMESUB2P, OTCHSUB2P, POLSUB2, DATERSUB2, MESTORSUB2, DOCSUB2, NATIONSUB2, GRAJDSUB2, MESTOLSUB2, FAMSUB3, NAMESUB3, OTCHSUB3, POLSUB3, DATERSUB3, MESTORSUB3, DOCSUB3, NATIONSUB3, GRAJDSUB3, MESTOLSUB3, FAMSUB4, NAMESUB4, OTCHSUB4, POLSUB4, DATERSUB4, MESTORSUB4, DOCSUB4, NATIONSUB4, GRAJDSUB4, MESTOLSUB4, FAMSUB5, NAMESUB5, OTCHSUB5, POLSUB5, DATERSUB5, MESTORSUB5, DOCSUB5, NATIONSUB5, GRAJDSUB5, MESTOLSUB5, DATESM, MESTOSM, PRICHSM, ANSWER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-  print input_path
-  st=u'Начало процесса загрузки, файлов для обработки:'+str( len(listdir(input_path) ))
-  logging.info( st )
+  sq="INSERT INTO ANSWERS (ID, FSUBJFAM, FSUBJNAME, FSUBJOTCH, FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, NUMSV2, DATESV, DATESV2, FAMSUB1, NAMESUB1, OTCHSUB1, POLSUB1, DATERSUB1, MESTORSUB1, DOCSUB1, NATIONSUB1, GRAJDSUB1, MESTOLSUB1, FAMSUB2, NAMESUB2, OTCHSUB2, POLSUB2, DATERSUB2, MESTORSUB2, DOCSUB2, NATIONSUB2, GRAJDSUB2, MESTOLSUB2, FAMSUB3, NAMESUB3, OTCHSUB3, POLSUB3, DATERSUB3, MESTORSUB3, DOCSUB3, NATIONSUB3, GRAJDSUB3, MESTOLSUB3, FAMSUB4, NAMESUB4, OTCHSUB4, POLSUB4, DATERSUB4, MESTORSUB4, DOCSUB4, NATIONSUB4, GRAJDSUB4, MESTOLSUB4, FAMSUB5, NAMESUB5, OTCHSUB5, POLSUB5, DATERSUB5, MESTORSUB5, DOCSUB5, NATIONSUB5, GRAJDSUB5, MESTOLSUB5, DATESM, MESTOSM, PRICHSM, ANSWER_ID, STATUS) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+    #"INSERT INTO ANSWERS (ID, FSUBJFAM, FSUBJNAME, FSUBJOTCH, FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, NUMSV2, DATESV, DATESV2, FAMSUB1, NAMESUB1, OTCHSUB1, FAMSUB1P, NAMESUB1P, OTCHSUB1P, POLSUB1, DATERSUB1, MESTORSUB1, DOCSUB1, NATIONSUB1, GRAJDSUB1, MESTOLSUB1, FAMSUB2, NAMESUB2, OTCHSUB2, FAMSUB2P, NAMESUB2P, OTCHSUB2P, POLSUB2, DATERSUB2, MESTORSUB2, DOCSUB2, NATIONSUB2, GRAJDSUB2, MESTOLSUB2, FAMSUB3, NAMESUB3, OTCHSUB3, POLSUB3, DATERSUB3, MESTORSUB3, DOCSUB3, NATIONSUB3, GRAJDSUB3, MESTOLSUB3, FAMSUB4, NAMESUB4, OTCHSUB4, POLSUB4, DATERSUB4, MESTORSUB4, DOCSUB4, NATIONSUB4, GRAJDSUB4, MESTOLSUB4, FAMSUB5, NAMESUB5, OTCHSUB5, POLSUB5, DATERSUB5, MESTORSUB5, DOCSUB5, NATIONSUB5, GRAJDSUB5, MESTOLSUB5, DATESM, MESTOSM, PRICHSM, ANSWER_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  print input_path                                                                                                                          
+  st=u'Начало процесса загрузки, файлов для обработки:'+unicode( len(listdir(input_path) )) +u' файлов.'
+  inform( st )
   
   for ff in listdir(input_path):
-   try:
-    db=dbf.Dbf(input_path+ff)
-   except Exception, e:
-    print str(e),"ERR FILE"
-    #sys.exit(2)
-   #Конвертация данных
-   #r=db[0]
-   answerid=getgenerator(cur,"GEN_ANSWER_ID")
-   for r in db:
-    id=getgenerator(cur,"GEN_ANSW")
-    answ=[]
-    #print len(db.fieldNames)
-    #print (db.fieldNames)
-    answ.append(id)
-    for i in range (0,len(db.fieldNames)):
-     #print i+2, db.fieldNames[i]
-     if 'DATE' in db.fieldNames[i]:
-      try:
-       dd=datetime.strptime(r[i],"%d.%m.%Y")
-      except:
-       dd=None
-      answ.append( dd)
-     else:
-      answ.append( str(r[i]).decode('CP866'))
-      #print i+2,'|',db.fieldNames[i], "|", str(len(str(r[i]).decode('CP866') )) ,"|",str(r[i]).decode('CP866')
-    answ.append(answerid)
-    #print answ
-    cur.execute(sq,answ)
-   #print str(db[0]).decode('CP866')
-   con.commit()
-   con.close()
+   with Profiler() as p:
+    try:
+     db=dbf.Dbf(input_path+ff)
+    except Exception, e:
+     print str(e),"ERR FILE"
+     #sys.exit(2)
+    #Конвертация данных
+    #r=db[0]
+    st=u'Загружаем файл '+unicode(ff) +u' содержащий '+ unicode(db.recordCount) +u' записей.'
+    inform(st) 
+    answerid=getgenerator(cur,"GEN_ANSWER_ID")
+    for r in db:
+     id=getgenerator(cur,"GEN_ANSW")
+     answ=[]
+     #print len(db.fieldNames)
+     #print (db.fieldNames)
+     answ.append(id)
+     for i in range (0,len(db.fieldNames)):
+      #print i+2, db.fieldNames[i]
+      if 'DATE' in db.fieldNames[i]:
+       try:
+        dd=datetime.strptime(r[i],"%d.%m.%Y")
+       except:
+        dd=None
+       answ.append( dd)
+      else:
+       answ.append( str(r[i]).decode('CP866'))
+       #print i+2,'|',db.fieldNames[i], "|", str(len(str(r[i]).decode('CP866') )) ,"|",str(r[i]).decode('CP866')
+     answ.append(answerid)
+     answ.append(None)
+     #print len(answ)
+     cur.execute(sq,answ)
+    #print str(db[0]).decode('CP866')
+    con.commit()
+    db.close()
+    rename(input_path+ff, input_arc_path+ff)
+  con.close()
   #with Profiler() as p:
 #select * from reestr reestr join answers on  (reestr.id=cast(answers.fsubjaddit as bigint))   
  if sys.argv[1]=='process':
@@ -386,7 +394,8 @@ def main():
    sys.exit(2)
   cur = con.cursor()
   with Profiler() as p:
-   sq='select FSUBJFAM, FSUBJNAME, FSUBJOTCH,FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, MESTOLSUB1, DATESM, MESTOSM, PRICHSM,docipdoc.id,docipdoc.doc_number,docipdoc.id_dbtr_fullname,answers.id,reestr.zapros_id,docipdoc.IP_EXEC_PRIST_NAME  from docipdoc join reestr on reestr.id=docipdoc.fk   join answers  on (reestr.id=answers.fsubjaddit) where docipdoc.fk in (select reestr.id  from answers  join reestr on reestr.id=answers.fsubjaddit where answers.datesm is not null and answers.status is null)'
+   sq='select FSUBJFAM, FSUBJNAME, FSUBJOTCH,FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, MESTOLSUB1, DATESM, MESTOSM, PRICHSM,docipdoc.id,docipdoc.doc_number,docipdoc.id_dbtr_fullname,answers.id,reestr.zapros_id,docipdoc.IP_EXEC_PRIST_NAME  from answers  join reestr on reestr.id=answers.fsubjaddit join docipdoc on docipdoc.fk=reestr.id where answers.datesm is not null and answers.status is null'
+      #select FSUBJFAM, FSUBJNAME, FSUBJOTCH,FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, MESTOLSUB1, DATESM, MESTOSM, PRICHSM,docipdoc.id,docipdoc.doc_number,docipdoc.id_dbtr_fullname,answers.id,reestr.zapros_id,docipdoc.IP_EXEC_PRIST_NAME  from docipdoc join reestr on reestr.id=docipdoc.fk   join answers  on (reestr.id=answers.fsubjaddit) where docipdoc.fk in (select reestr.id  from answers  join reestr on reestr.id=answers.fsubjaddit where answers.datesm is not null and answers.status is null)'
    sq2='select count (id) from answers where answers.status is null'
    sq3='INSERT INTO ANSWERS_OSP (ID, FSUBJFAM, FSUBJNAME, FSUBJOTCH, FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, MESTOLSUB1, DATESM, MESTOSM, PRICHSM, IP_ID, DOC_NUMBER, ID_DBTR_FULLNAME, ANSWER_ID, ZAPROS_ID, IP_EXEC_PRIST_NAME,STATUS) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
    sq4='update answers  set status=2 where answers.id in (select  answers.id from answers  join reestr on reestr.id=answers.fsubjaddit where answers.datesm is not  null  and answers.status is null)'
