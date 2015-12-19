@@ -459,7 +459,7 @@ def main():
     textdoc=initdoc()
     table,tablecontents,textdoc=inittable(textdoc)
     row=(fd[3], fd[4], fd[5], fd[6], fd[7], fd[8], fd[9], fd[10],  fd[11], fd[12], fd[13],fd[14]  )
-    print row
+    #print row
     table=addrow(row,table,tablecontents)
 
     cur.execute(sq2+pp[0]+' order by answers_osp.ip_exec_prist_name')
@@ -471,12 +471,12 @@ def main():
      print sq3
      root2=etree.SubElement(root,'answer') 
      row=(r[j][3], r[j][4], r[j][5], r[j][6], r[j][7], r[j][8].strftime('%d.%m.%y'), r[j][9], r[j][10], r[j][11].strftime('%d.%m.%y'), r[j][12], r[j][13],r[j][14]  )
-     print row
+     #print row
      table=addrow(row,table,tablecontents)
      #el=etree.SubElement(root2,'packet_id')
      #el.text=unicode( unicode(packet_id) )
      #ff['packet_id']=unicode(packet_id)
-     print 'LEN', len(r[j])
+     #print 'LEN', len(r[j])
      for i in range(0, len(r[j])):
       if ff[i]=='packet_id':
        el=etree.SubElement(root2,'packet_id')
@@ -492,7 +492,7 @@ def main():
     con.commit() 
     savetable(table,textdoc,output_path2+'/'+datedir+'/'+fn2)
     xml= etree.tostring(root, pretty_print=True, encoding='UTF-8', xml_declaration=True)
-    print output_path+fn,xml
+    #print output_path+fn,xml
     f=file (output_path+fn , 'w')
     f.write(xml)
     f.close()
