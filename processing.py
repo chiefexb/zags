@@ -464,8 +464,13 @@ def main():
        el=etree.SubElement(root2,'packet_id')
        el.text=unicode( unicode(packet_id) )
       else:
-       el=etree.SubElement(root2,ff[i])
-       el.text=unicode( r[j][i] )
+       if (str(type( r[j][i] ))=="<type 'datetime.datetime'>") or (str(type( r[j][i] ))=="<type 'datetime.date'>"):
+        el=etree.SubElement(root2,ff[i])
+        el.text=( r[j][i].strftime('%d.%m.%Y'))
+       else:
+        el=etree.SubElement(root2,ff[i])
+        el.text=unicode(r[j][i])
+
     con.commit() 
     savetable(table,textdoc,output_path2+'/'+datedir+'/'+fn2)
     xml= etree.tostring(root, pretty_print=True, encoding='UTF-8', xml_declaration=True)
