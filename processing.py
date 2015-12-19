@@ -57,10 +57,13 @@ def main():
  print  len(sys.argv)
  if len(sys.argv) <2:
   print "Для запуска набери: ./processing.py loadrbd|process|get"
-  print '	loadrbd - Загрузка новых данных из РБД'
-  print '	delete    Очистка	'
-  print '	process - Поиск соответвий реестров из ЗАГС с данными из РБД'
-  print '	get <КОД ОТДЕЛА> <КОЛ-ВО>     - Выгрузка Файлов для ЗАГС'
+  print '	loadrbd	- Загрузка новых данных из РБД'
+  print '	group	- Группировка'
+  print '	get <КОД ОТДЕЛА> <КОЛ-ВО>	- Выгрузка Файлов для ЗАГС'
+  print '	delete	Очистка	'
+  print '	upload	- Загрузка ответов'
+  print '	process	- Поиск соответвий реестров из ЗАГС с данными из РБД'
+  print '	download	Выгрузка ответов в ОСП'
   print sys.argv
   sys.exit(2)
  logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s',level = logging.DEBUG, filename = './processing.log')
@@ -176,7 +179,7 @@ def main():
     #print r2,rr[1]
     r2.extend( [rr[1]] ) 
     #sq3="select * from docipdoc where upper(docipdoc.id_dbtr_fullname)="+quoted(rr[0]) +" and docipdoc.id_dbtr_born="+quoted(str(rr[1]))
-    sq3="INSERT INTO REESTR (ID, ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_BORN) VALUES (?, ?, ?, ?, ?, ?)" 
+    sq3="INSERT INTO REESTR (ID, ID_DBTR_FULLNAME, ID_DBTR_FIRSTNAME, ID_DBTR_SECONDNAME, ID_DBTR_LASTNAME, ID_DBTR_BORN) VALUES (?, ?, ?, ?, ?, ?)"  ##TEST
     #print rr[4], type (rr[4])
     #sq4="UPDATE DOCIPDOC SET STATUS=1, FK="+str(id)+" where UPPER(DOCIPDOC.ID_DBTR_FULLNAME)="+quoted(rr[0])+" and  docipdoc.id_dbtr_born="+quoted( str (rr[4].strftime("%d.%m.%Y") ) )
     #print sq4
@@ -383,9 +386,9 @@ def main():
    sys.exit(2)
   cur = con.cursor()
   with Profiler() as p:
-   sq='select FSUBJFAM, FSUBJNAME, FSUBJOTCH,FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, MESTOLSUB1, DATESM, MESTOSM, PRICHSM,docipdoc.id,docipdoc.doc_number,docipdoc.id_dbtr_fullname,answers.id,reestr.zapros_id  from docipdoc join reestr on reestr.id=docipdoc.fk   join answers  on (reestr.id=answers.fsubjaddit) where docipdoc.fk in (select reestr.id  from answers  join reestr on reestr.id=answers.fsubjaddit where answers.datesm is not null and answers.status is null)'
+   sq='select FSUBJFAM, FSUBJNAME, FSUBJOTCH,FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, MESTOLSUB1, DATESM, MESTOSM, PRICHSM,docipdoc.id,docipdoc.doc_number,docipdoc.id_dbtr_fullname,answers.id,reestr.zapros_id,docipdoc.IP_EXEC_PRIST_NAME  from docipdoc join reestr on reestr.id=docipdoc.fk   join answers  on (reestr.id=answers.fsubjaddit) where docipdoc.fk in (select reestr.id  from answers  join reestr on reestr.id=answers.fsubjaddit where answers.datesm is not null and answers.status is null)'
    sq2='select count (id) from answers where answers.status is null'
-   sq3='INSERT INTO ANSWERS_OSP (ID, FSUBJFAM, FSUBJNAME, FSUBJOTCH, FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, MESTOLSUB1, DATESM, MESTOSM, PRICHSM, IP_ID, DOC_NUMBER, ID_DBTR_FULLNAME, ANSWER_ID, ZAPROS_ID, STATUS) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+   sq3='INSERT INTO ANSWERS_OSP (ID, FSUBJFAM, FSUBJNAME, FSUBJOTCH, FSUBJDATER, FSUBJADDIT, NAMETYPEAZ, NAMEZAGS, NUMAZ, DATEAZ, NUMSV, MESTOLSUB1, DATESM, MESTOSM, PRICHSM, IP_ID, DOC_NUMBER, ID_DBTR_FULLNAME, ANSWER_ID, ZAPROS_ID, IP_EXEC_PRIST_NAME,STATUS) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
    sq4='update answers  set status=2 where answers.id in (select  answers.id from answers  join reestr on reestr.id=answers.fsubjaddit where answers.datesm is not  null  and answers.status is null)'
    sq5='update answers  set status=1 where answers.id in (select  answers.id from answers  join reestr on reestr.id=answers.fsubjaddit where answers.datesm is   null  and answers.status is null)' 
    st=u'Начало процесса сверки. Объединяем положительные ответы '
