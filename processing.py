@@ -87,9 +87,8 @@ def main():
  nd=xmlroot.find('output_path2')
  output_type=xmlroot.find('output_type').text
  output_path2=nd.text
- output_path3=nd.text
  nd=xmlroot.find('output_path3')
-
+ output_path3=nd.text
  nd=xmlroot.find('input_path')
  input_path=nd.text
  nd=xmlroot.find('input_arc_path')
