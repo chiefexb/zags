@@ -329,6 +329,10 @@ def main():
   inform(st)
   with Profiler() as p:  
    cur.execute ("delete from docipdoc" )
+   cur.execute ("delete from answers" )
+   cur.execute ("delete from answers_osp" )
+   cur.execute ("delete from reestr") 
+
    con.commit()  
  if sys.argv[1]=='upload':
   try:
